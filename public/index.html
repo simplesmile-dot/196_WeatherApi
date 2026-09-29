@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geolocation</title>
+<style>
+  body { font-family: Georgia, "Times New Roman", serif; background: #eceff1; color: #222; margin: 0; padding: 30px 15px; }
+  .page { max-width: 640px; margin: 0 auto; background: #fff; border: 1px solid #999; box-shadow: 3px 3px 0 #bbb; }
+  header { background: #1f3a5f; color: #fff; padding: 16px 24px; border-bottom: 4px double #fff; }
+  header h1 { margin: 0; font-size: 1.6rem; font-weight: normal; }
+  .identitas { padding: 14px 24px; border-bottom: 1px solid #999; background: #f7f7f7; }
+  .identitas p { margin: 4px 0; font-size: 1.05rem; }
+  .identitas b { display: inline-block; width: 60px; }
+  .isi { padding: 20px 24px 26px; }
+  form { margin-bottom: 18px; }
+  label { font-weight: bold; margin-right: 6px; }
+  input { font: inherit; padding: 6px 8px; width: 260px; max-width: 100%; border: 1px solid #666; }
+  button { font: inherit; padding: 6px 16px; border: 1px solid #1f3a5f; background: #1f3a5f; color: #fff; cursor: pointer; }
+  button:hover { background: #2d5285; }
+  button:disabled { opacity: .6; cursor: wait; }
+  #status { min-height: 1.3em; margin: 0 0 12px; font-style: italic; color: #555; }
+  #status.err { color: #b00020; font-style: normal; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #777; padding: 9px 12px; text-align: left; }
+  th { width: 34%; background: #e6ebf2; font-weight: bold; }
+  td.kosong { color: #888; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header><h1>Geolocation</h1></header>
+
+  <!-- Ganti nama dan NIM di sini -->
+  <div class="identitas">
+    <p><b>Nama</b>: Ahmad Zidane Agil </p>
+    <p><b>NIM</b>: 20240140196</p>
+  </div>
+
+  <div class="isi">
+    <form id="form">
+      <label for="lokasi">Lokasi :</label>
+      <input id="lokasi" type="text" placeholder="Contoh: Yogyakarta" autocomplete="off" required>
+      <button id="btn" type="submit">Cari</button>
+    </form>
+    <p id="status" role="status"></p>
+
+    <table>
+      <tr><th>Negara</th><td id="negara" class="kosong">-</td></tr>
+      <tr><th>Provinsi</th><td id="provinsi" class="kosong">-</td></tr>
+      <tr><th>Kecamatan</th><td id="kecamatan" class="kosong">-</td></tr>
+      <tr><th>Longitude</th><td id="longitude" class="kosong">-</td></tr>
+      <tr><th>Latitude</th><td id="latitude" class="kosong">-</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function isi(id, nilai) {
+    const el = $(id);
+    const ada = nilai !== null && nilai !== undefined && nilai !== "";
+    el.textContent = ada ? nilai : "tidak tersedia";
+    el.className = ada ? "" : "kosong";
+  }
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const q = $("lokasi").value.trim();
+    if (!q) return;
+
+    $("status").className = "";
+    $("status").textContent = "Mencari lokasi...";
+    $("btn").disabled = true;
+
+    try {
+      const res = await fetch("/api/lokasi?q=" + encodeURIComponent(q));
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      isi("negara", data.negara);
+      isi("provinsi", data.provinsi);
+      isi("kecamatan", data.kecamatan);
+      isi("longitude", data.longitude);
+      isi("latitude", data.latitude);
+      $("status").textContent = data.nama;
+    } catch (err) {
+      $("status").className = "err";
+      $("status").textContent = err.message || "Terjadi kesalahan, coba lagi.";
+    } finally {
+      $("btn").disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
